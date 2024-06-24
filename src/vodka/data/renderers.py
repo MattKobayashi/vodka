@@ -39,9 +39,10 @@ class RPC(DataRenderer):
         def wrapped(*args, **kwargs):
             resp = {"meta": {}, "data": self.data_type()}
             try:
-                i_args = inspect.getargspec(fn)
-                if i_args.args and i_args.args[0] == "self":
-                    fn(args[0], resp["data"], meta=resp["meta"], *args, **kwargs)
+                sig = inspect.signature(fn)
+                parameters = sig.parameters
+                if parameters and list(parameters.keys())[0] == "self":
+                    fn(args[0], resp["data"], meta=resp["meta"], *args[1:], **kwargs)
                 else:
                     fn(resp["data"], meta=resp["meta"], *args, **kwargs)
             except Exception as inst:
