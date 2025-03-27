@@ -9,6 +9,7 @@ from functools import update_wrapper
 
 try:
     from flask import Flask, request, send_from_directory, make_response, current_app
+    from werkzeug.middleware.proxy_fix import ProxyFix
 except ImportError:
     Flask = None
 
@@ -82,6 +83,9 @@ class VodkaFlask(vodka.plugins.wsgi.WSGIPlugin):
         flask_app.debug = self.get_config("debug")
         flask_app.use_reloader = False
         self.set_server(flask_app, fnc_serve=flask_app.run)
+
+        # Apply ProxyFix middleware to handle reverse proxy headers
+        flask_app.wsgi_app = ProxyFix(flask_app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     def request_env(self, req=None, **kwargs):
         url = urllib.parse.urlparse(request.url)
